@@ -1,0 +1,27 @@
+{
+    "platform": "win32",
+    "sorted": false,
+    "catComList": [
+        {
+            "name": "example 1",
+            "description": "The first example",
+            "subCatCom": [
+                "git status"
+            ]
+        },
+        {
+            "name": "category 1",
+            "description": "A category example",
+            "subCatCom": [
+                {
+                    "name": "example 2",
+                    "description": "The second example",
+                    "subCatCom": [
+                        "ls"
+                    ],
+                    "execEnv": "powershell"
+                }
+            ]
+        }
+    ]
+}
