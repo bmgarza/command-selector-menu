@@ -35,6 +35,7 @@ interface CatCom {
     name: string;
     description: string;
     subCatCom: CatCom[] | string[];
+    confirm?: boolean;
     execEnv?: string;
 }
 
@@ -201,6 +202,22 @@ function getOptionNumber(): Promise<number> {
     });
 }
 
+function confirmCommand(name: string): Promise<boolean> {
+    return new Promise((resolve: (value?: boolean | PromiseLike<boolean>) => void, reject: (reason?: any) => void) => {
+        rlInterface.question(
+            `\nAre you sure you want to run the (${ConsoleTextYellow}${name}${ConsoleTextReset}) command? `,
+            (answer: string) => {
+                if (answer.match(/^[Yy]+[Ee]*[Ss]*/g) !== null) {
+                    resolve(true);
+                }
+                else {
+                    resolve(false);
+                }
+            }
+        );
+    });
+}
+
 interface CommandSelectionMenuReturn {
     startTime: number;
     optionSelectedList: number[];
@@ -223,13 +240,21 @@ async function commandSelectionMenu(filePath: string): Promise<CommandSelectionM
             optionSelected < currentCatComList.length
         ) {
             // The option was within the acceptable bounds.
-            optionSelectedList.push(optionSelected);
             if (isCategory(currentCatComList[optionSelected])) {
+                optionSelectedList.push(optionSelected);
                 // Because we know that the option selected was a category, casting the value assigned here is fine.
                 currentCatComList = <CatCom[]>currentCatComList[optionSelected].subCatCom;
                 continue;
             }
             else {
+                if (currentCatComList[optionSelected].confirm === true) {
+                    let response: boolean = await confirmCommand(currentCatComList[optionSelected].name);
+                    if (response === false) {
+                        colorConsole("Command selection canceled.", ConsoleTextRed);
+                        continue;
+                    }
+                }
+                optionSelectedList.push(optionSelected);
                 const commandStartTime: number = Date.now();
                 await runCommand(currentCatComList[optionSelected]);
                 return {
@@ -262,12 +287,13 @@ if(
     // This file was provided a valid json file to get its information.
     commandSelectionMenu(fileProvided)
         .then((ret: CommandSelectionMenuReturn) => {
-            console.log(`\nCommand executed in ${Date.now() - ret.startTime}ms`);
-            console.log(`Indexes Selected: ${ret.optionSelectedList.join(" ")}`);
+            colorConsole(`CSM: Command executed in ${Date.now() - ret.startTime}ms`, ConsoleTextMagenta);
+            colorConsole(`CSM: Indexes Selected: ${ret.optionSelectedList.join(" ")}`, ConsoleTextMagenta);
             process.exit(0);
         })
         .catch((error: Error) => {
             throw error;
+            process.exit(1);
         });
 }
 else {
