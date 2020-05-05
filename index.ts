@@ -2,105 +2,34 @@ import {
     platform as osPlatform,
 } from "os";
 import {
-    exec as osExec,
-    ExecException,
-    spawn as spawnCmd,
-    ChildProcessWithoutNullStreams,
-} from "child_process";
-import {
     existsSync as doesFileExist, readFileSync,
 } from "fs";
 import {
     extname as fileExtension,
 } from "path";
+
 import {
-    createInterface,
-    Interface as readlineInterface,
-} from "readline";
-
-enum ExecEnvOption {
-    WinCommandPrompt = "cmd",
-    WinPowershell = "powershell",
-    Bash = "bash",
-    Sh = "sh",
-}
-
-interface CatComJSON {
-    platform: string;
-    sorted: boolean;
-    catComList: CatCom[];
-}
-
-interface CatCom {
-    name: string;
-    description: string;
-    subCatCom: CatCom[] | string[];
-    confirm?: boolean;
-    execEnv?: string;
-}
-
-enum Platforms {
-    Linux = "linux",
-    MacOS = "darwin",
-    Windows = "win32"
-}
-
-const ConsoleTextMagenta: string = "\x1b[35m";
-const ConsoleTextBlack: string   = "\x1b[30m"
-const ConsoleTextRed: string     = "\x1b[31m"
-const ConsoleTextGreen: string   = "\x1b[32m"
-const ConsoleTextYellow: string  = "\x1b[33m"
-const ConsoleTextBlue: string    = "\x1b[34m"
-const ConsoleTextCyan: string    = "\x1b[36m"
-const ConsoleTextWhite: string   = "\x1b[37m"
-const ConsoleTextReset: string   = "\x1b[0m";
-
-function colorConsole(output: string, color: string): void {
-    console.log(`${color}${output}${ConsoleTextReset}`);
-}
-
-// A promise wrapper for the exec command callback in order to be able to use the command with the async await notation
-function executeCommand(commandString: string): Promise<string> {
-    return new Promise((resolve: (value?: string | PromiseLike<string>) => void,
-                        reject: (reason?: any) => void) => {
-        osExec(
-            commandString,
-            (error: ExecException, stdout: string, stderr: string) => {
-                if (error === null) {
-                    resolve(stdout);
-                } else {
-                    reject(stderr);
-                }
-            },
-        );
-    });
-}
-
-// A promise wrapper for the spawn comman callback in order to be able to use the command with the async await notation
-function spawnCommand(commandString: string, args?: string[], lineEndAdjust?: boolean): Promise<void> {
-    return new Promise((resolve: (value?: void | PromiseLike<void>) => void, reject: (reason?: any) => void) => {
-        let cmd: ChildProcessWithoutNullStreams = spawnCmd(
-            commandString,
-            args,
-            {
-                // Don't let the processes that are spawned be detached from the parent process
-                detached: false,
-                // Preserve stdio when running the command
-                stdio: "inherit",
-            }
-        );
-
-        cmd.on("close", (code: number) => {
-            if(code === 0) {
-                resolve();
-            }
-            else {
-                let err: Error = new Error(`Command exited with code: ${code}`)
-                reject(err);
-            }
-        });
-    });
-}
+    CatCom,
+    CatComJSON,
+    CommandSelectionMenuReturn,
+    ExecEnvOption,
+    Platforms,
+} from "./cat-com-structs";
+import {
+    ConsoleTextMagenta,
+    ConsoleTextRed,
+    ConsoleTextYellow,
+    ConsoleTextReset,
+    colorConsole,
+} from "./console-colors";
+import {
+    executeCommand,
+    spawnCommand,
+} from "./shell-command-promise-wrappers";
+import {
+    confirmCommand,
+    getOptionNumber,
+} from "./user-interface"
 
 async function runCommand(command: CatCom): Promise<void> {
     colorConsole(`CSM: Running "${command.name}"`, ConsoleTextMagenta);
@@ -166,61 +95,6 @@ function listCommands(catComObjList: CatCom[]): void {
             printCommand(i, catComObjList[i].name, catComObjList[i].description);
         }
     }
-}
-
-// function verifyJSONFile(catComJSONObj: CatComJSON): boolean {
-//     // TODO: BG (May. 04, 2020) Finish this function
-//     return true;
-// }
-
-// function sortJSONFile(catComJSONObj: CatComJSON): void {
-//     // TODO: BG (May. 04, 2020) Finish this function
-// }
-
-const rlInterface: readlineInterface = createInterface(
-    {
-        input: process.stdin,
-        output: process.stdout,
-    }
-);
-
-function getOptionNumber(): Promise<number> {
-    return new Promise((resolve: (value?: number | PromiseLike<number>) => void, reject: (reason?: any) => void) => {
-        rlInterface.question(
-            "\nEnter option number: ",
-            (answer: string) => {
-                const parsedInt: number = parseInt(answer);
-                if(!isNaN(parsedInt)) {
-                    resolve(parsedInt);
-                }
-                else {
-                    // This function doesn't reject because handling rejects in the async notation is disgusting.
-                    resolve(-1);
-                }
-            }
-        );
-    });
-}
-
-function confirmCommand(name: string): Promise<boolean> {
-    return new Promise((resolve: (value?: boolean | PromiseLike<boolean>) => void, reject: (reason?: any) => void) => {
-        rlInterface.question(
-            `\nAre you sure you want to run the (${ConsoleTextYellow}${name}${ConsoleTextReset}) command? `,
-            (answer: string) => {
-                if (answer.match(/^[Yy]+[Ee]*[Ss]*/g) !== null) {
-                    resolve(true);
-                }
-                else {
-                    resolve(false);
-                }
-            }
-        );
-    });
-}
-
-interface CommandSelectionMenuReturn {
-    startTime: number;
-    optionSelectedList: number[];
 }
 
 async function commandSelectionMenu(filePath: string): Promise<CommandSelectionMenuReturn> {
