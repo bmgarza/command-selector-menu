@@ -14,22 +14,22 @@ import {
     CommandSelectionMenuReturn,
     ExecEnvOption,
     Platforms,
-} from "./cat-com-structs";
+} from "./src/cat-com-structs";
 import {
     ConsoleTextMagenta,
     ConsoleTextRed,
     ConsoleTextYellow,
     ConsoleTextReset,
     colorConsole,
-} from "./console-colors";
+} from "./src/console-colors";
 import {
     executeCommand,
     spawnCommand,
-} from "./shell-command-promise-wrappers";
+} from "./src/shell-command-promise-wrappers";
 import {
     confirmCommand,
     getOptionNumber,
-} from "./user-interface"
+} from "./src/user-interface"
 
 async function runCommand(command: CatCom): Promise<void> {
     colorConsole(`CSM: Running "${command.name}"`, ConsoleTextMagenta);
@@ -141,15 +141,18 @@ async function commandSelectionMenu(filePath: string): Promise<CommandSelectionM
             colorConsole("A valid parameter was not entered, please try again.", ConsoleTextRed);
             continue;
         }
-
-        return;
     }
 }
 
 // TODO: BG (May. 04, 2020) Add the ability to pass through arguments which act as shortcuts for navigating through the
 //  command JSON. i.e. if the user adds the arguments 2 12 4 it should navigate through the options that correspond to
 //  those numbers in the JSON, if the option that was selected was a command run it, if the option that was selected was
-//  a category start the selection process at the category.
+//  a category start the selection process at the category. Make sure that this option is available through a flag and
+//  not through regular means.
+
+// TODO: BG (May. 06, 2020) Add the ability for any extra arguments, or any arguments after the -- characters, to be
+//  passed through to the function that is being run. Alternatively allow the user to set an option that will prompt the
+//  user for the arguments that are going to be used with the function that they have selected.
 
 const fileProvided: string = process.argv[2];
 
@@ -167,6 +170,8 @@ if(
         })
         .catch((error: Error) => {
             throw error;
+        })
+        .finally(() => {
             process.exit(1);
         });
 }
