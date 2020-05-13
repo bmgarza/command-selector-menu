@@ -25,7 +25,14 @@ export enum Platforms {
     Windows = "win32"
 }
 
-export interface CommandSelectionMenuReturn {
+export interface MainReturn {
     startTime: number;
-    optionSelectedList: number[];
+    optionSelectedHistory: number[];
+}
+
+export interface CommandSelectionMenuReturn {
+    commandSelectedParentList: CatCom[];
+    commandSelected: CatCom;
+    indexSelected: number;
+    optionSelectedHistory: number[];
 }
