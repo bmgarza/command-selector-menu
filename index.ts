@@ -1,6 +1,6 @@
 import { platform as osPlatform } from "os";
 import { existsSync as doesFileExist, readFileSync } from "fs";
-import { extname as fileExtension } from "path";
+import { extname as fileExtension, join as pathJoin } from "path";
 import * as commandLineArguments from "command-line-args";
 // This isn't strictly necessary, but it makes the types more legible
 import { OptionDefinition, CommandLineOptions } from "command-line-args";
@@ -24,22 +24,25 @@ import {
 import { executeCommand, spawnCommand } from "./src/shell-command-promise-wrappers";
 import { confirmCommand, getOptionNumber } from "./src/user-interface"
 
-// TODO: BG (May. 04, 2020) Add the ability to pass through arguments which act as shortcuts for navigating through the
-//  command JSON. i.e. if the user adds the arguments 2 12 4 it should navigate through the options that correspond to
-//  those numbers in the JSON, if the option that was selected was a command run it, if the option that was selected was
-//  a category start the selection process at the category. Make sure that this option is available through a flag and
-//  not through regular means.
+/**
+ * TODO: BG (May. 06, 2020) After some forthought I've come to the conclusion that this command line application
+ * shouldn't allow the user to input open-ended arguments. There are too many problems that come up when trying to get
+ * something like that working:
+ * * I feel that most of the instances where you would want to pass through a specific argument most of those instances
+ *   would use a file's location as the argument that is passed through. The problem with this is that there is no
+ *   reasonable way of including auto-complete functionality for the files that could be passed through to the
+ *   function.
+ * * I think that it would work to add this functionality for situations where you want to simply search for a file
+ *   name in the current directory or any situations where you don't need to input a file path as an argument. But at
+ *   the moment there aren't enough shortcuts that I want to implement that would use this functionality so...
+ */
 
-// TODO: BG (May. 06, 2020) After some forthought I've come to the conclusion that this command line application
-//  shouldn't allow the user to input open-ended arguments. There are too many problems that come up when trying to get
-//  something like that working:
-//  * I feel that most of the instances where you would want to pass through a specific argument most of those instances
-//    would use a file's location as the argument that is passed through. The problem with this is that there is no
-//    reasonable way of including auto-complete functionality for the files that could be passed through to the
-//    function.
-//  * I think that it would work to add this functionality for situations where you want to simply search for a file
-//    name in the current directory or any situations where you don't need to input a file path as an argument. But at
-//    the moment there aren't enough shortcuts that I want to implement that would use this functionality so...
+/**
+ * TODO: BG (May. 13, 2020) I had a thoughts to potentially add the ability for the script to detect if there is a
+ * csm.json file at the current directory and add that to the set of commands for the user to select from. However, I am
+ * still unsure since this will add complexity when it comes to the index navigation, specifically that the index
+ * navigation would fail sometimes if the user isn't in the correct directory and that doesn't sound right.
+ */
 
 enum ArgumentEnum {
     FILE = "file",
@@ -52,6 +55,7 @@ const argumentOptions: OptionDefinition[] = [
         name: ArgumentEnum.FILE,
         alias: "f",
         type: String,
+        defaultValue: pathJoin(__dirname, "csm.json"),
     },
     {
         name: ArgumentEnum.INDEXNAV,
@@ -73,44 +77,32 @@ if(
     doesFileExist(optionsReceived[ArgumentEnum.FILE]) &&
     fileExtension(optionsReceived[ArgumentEnum.FILE]) === ".json"
 ) {
+    // The script was provided with a valid csm.json file
+    let executionPromise: Promise<MainReturn>;
     if (optionsReceived[ArgumentEnum.INDEXNAV] !== undefined) {
-        // If there was an indexNavigation argument passed through
-        selectCommandFromIndexNavigation(
-            optionsReceived[ArgumentEnum.FILE],
-            parseIndexNavigationString(optionsReceived[ArgumentEnum.INDEXNAV]),
-           ).then((ret: MainReturn) => {
-                colorConsole(`CSM: Command executed in ${Date.now() - ret.startTime}ms`, ConsoleTextMagenta);
-                colorConsole(
-                    `CSM: Navigation shortcut flag: ${ConsoleTextReset}-i ${ret.optionSelectedHistory.join(",")}`,
-                    ConsoleTextMagenta
-                );
-                process.exit(0);
-            })
-            .catch((error: Error) => {
-                throw error;
-            })
-            .finally(() => {
-                process.exit(1);
-            });
+        // The index navigation flag was given
+        executionPromise = selectCommandFromIndexNavigation(optionsReceived[ArgumentEnum.FILE],
+                                                            parseIndexNavigationString(optionsReceived[ArgumentEnum.INDEXNAV]));
     }
     else {
-        // This file was provided a valid json file to get its information.
-        openCommandSelectionJSON(optionsReceived[ArgumentEnum.FILE])
-            .then((ret: MainReturn) => {
-                colorConsole(`CSM: Command executed in ${Date.now() - ret.startTime}ms`, ConsoleTextMagenta);
-                colorConsole(
-                    `CSM: Navigation shortcut flag: ${ConsoleTextReset}-i ${ret.optionSelectedHistory.join(",")}`,
-                    ConsoleTextMagenta
-                );
-                process.exit(0);
-            })
-            .catch((error: Error) => {
-                throw error;
-            })
-            .finally(() => {
-                process.exit(1);
-            });
+        executionPromise = openCommandSelectionJSON(optionsReceived[ArgumentEnum.FILE]);
     }
+
+    executionPromise
+        .then((ret: MainReturn) => {
+            colorConsole(`CSM: Command executed in ${ConsoleTextReset}${Date.now() - ret.startTime}ms`, ConsoleTextMagenta);
+            colorConsole(
+                `CSM: Navigation shortcut flag: ${ConsoleTextReset}-i ${ret.optionSelectedHistory.join(",")}`,
+                ConsoleTextMagenta
+            );
+            process.exit(0);
+        })
+        .catch((error: Error) => {
+            throw error;
+        })
+        .finally(() => {
+            process.exit(1);
+        });
 }
 else {
     console.log("A valid json file was not provided");
@@ -131,8 +123,13 @@ function parseIndexNavigationString(input: string): number[] {
     }
 }
 
-// TODO: BG (May. 12, 2020) Finish the rewrite you were working on. Eventually you want there to be only one exit point
-//  that both the index navigation and the manu selection go to.
+/**
+ * Navigate through the csm.json that was provided given the index navigation string that was provided. If it
+ * successfully finds a command it runs it, if it finds a category it presents the user with a user interface to
+ * continue navigating through the category.
+ * @param filePath The path to the csm.json you want to work with.
+ * @param indexNav The parsed index navigation string provided by the user.
+ */
 async function selectCommandFromIndexNavigation(filePath: string, indexNav: number[]): Promise<MainReturn> {
     if (indexNav.length === 0) {
         throw new Error("Insufficient index navigation provided.");
@@ -142,13 +139,10 @@ async function selectCommandFromIndexNavigation(filePath: string, indexNav: numb
 
     colorConsole(`File configuration path: ${filePath}`, ConsoleTextMagenta);
 
+    // Keep track of the CatCom list when navigating in case we don't find a command at the end of the index navigation.
     let currentCatComList: CatCom[] = parsedCommandJSON.catComList;
     let currentCatComSelected: CatCom;
-    // TODO: BG (May. 07, 2020) Finish this portion of the function. It will go through the list of indexes that were
-    //  provided and then, if the final object is a category it will let the user continue the selection process, if the
-    //  final object is a command it will run the command. If the function finds an index that doesn't have a
-    //  corresponding index value in the command JSON file provided, it will default back to the commandSelectionMenu
-    //  function as a return. Everything should be happy if this is done.
+
     let i;
     for (i = 0; i < indexNav.length; i++) {
         try {
@@ -170,9 +164,10 @@ async function selectCommandFromIndexNavigation(filePath: string, indexNav: numb
     }
 
     if (isCategory(currentCatComSelected)) {
+        console.log(`${ConsoleTextMagenta}CSM category found: ${getCategoryPrint(currentCatComSelected)}`);
         return await commandSelectionMenuLoop(<CatCom[]>currentCatComSelected.subCatCom);
     } else {
-        console.log(`${ConsoleTextMagenta}CSM command found: ${ConsoleTextCyan}${currentCatComSelected.name}: ${ConsoleTextReset}${currentCatComSelected.description}`);
+        console.log(`${ConsoleTextMagenta}CSM command found: ${getCommandPrint(currentCatComSelected)}`);
         return {
             startTime: await runCommandSelected(currentCatComSelected),
             // We slice based on the last index that we ran in order to 
@@ -200,8 +195,10 @@ async function openCommandSelectionJSON(filePath: string): Promise<MainReturn> {
  * @param catComList 
  */
 async function commandSelectionMenuLoop (catComList: CatCom[]): Promise<MainReturn> {
+    // Keep track of the CatCom list and the option selection history as we are traversing the csm.json
     let currentCatComList: CatCom[] = catComList;
     let currentOptionSelectedHistory: number[] = [];
+
     while (true) {
         const selectionReturn: CommandSelectionMenuReturn = await commandSelectionMenu(currentCatComList, currentOptionSelectedHistory);
         // Assign the current CatCom list to be the parent list that was return from the selection menu to allow the user 
@@ -234,8 +231,12 @@ async function commandSelectionMenuLoop (catComList: CatCom[]): Promise<MainRetu
     }
 }
 
-// Given a CatCom list, this function provides a command selection menu to the user until they select a CatCom option
-//  that contains a command.
+/**
+ * Given a CatCom list, this function provides a command selection menu to the user until they select a CatCom option
+ * that contains a command.
+ * @param catComList 
+ * @param optionsSelected 
+ */
 async function commandSelectionMenu(catComList: CatCom[], optionsSelected: number[] = []): Promise<CommandSelectionMenuReturn> {
     // If we are going to display a command selection menu to the user, we need to make sure that they are aware of what
     //  colors correspond to what.
@@ -246,8 +247,6 @@ async function commandSelectionMenu(catComList: CatCom[], optionsSelected: numbe
     const optionSelectedList: number[] = optionsSelected;
 
     while (true) {
-        // TODO: BG (May. 07, 2020) Abstrat this portion of the function into its own function since it will be used in
-        //  both the selectCommandFromIndex and the commandSelectionMenu functions.
         listCommands(currentCatComList);
         const optionSelected: number = await getOptionNumber();
 
@@ -290,8 +289,6 @@ async function runCommandSelected(selectedCommand: CatCom): Promise<number> {
         let response: boolean = await confirmCommand(selectedCommand.name);
         if (response === false) {
             throw new Error("Command selection canceled.");
-            // colorConsole("Command selection canceled.", ConsoleTextRed);
-            // continue;
         }
     }
 
@@ -301,6 +298,12 @@ async function runCommandSelected(selectedCommand: CatCom): Promise<number> {
     return commandStartTime;
 }
 
+/**
+ * Selects the CatCom at the index within the CatCom list that was provided. This probably doesn't need to be a
+ * function, but here we are...
+ * @param catComList 
+ * @param indexSelected 
+ */
 function selectCatCom(catComList: CatCom[], indexSelected: number): CatCom {
     if (
         indexSelected >= 0 &&
@@ -314,8 +317,13 @@ function selectCatCom(catComList: CatCom[], indexSelected: number): CatCom {
 
 }
 
+/**
+ * This function goes through the process of running the command on the platform this is being run on.
+ * @param command 
+ */
 async function runCommand(command: CatCom): Promise<void> {
-    colorConsole(`CSM: Running "${command.name}"`, ConsoleTextMagenta);
+    console.log(`${ConsoleTextMagenta} CSM: Running "${ConsoleTextCyan}${command.name}${ConsoleTextMagenta}"`);
+
     switch(osPlatform()) {
         case Platforms.Windows:
             await runWindowsCommand(command);
@@ -324,7 +332,7 @@ async function runCommand(command: CatCom): Promise<void> {
         case Platforms.MacOS:
         case Platforms.Linux:
         default:
-            console.log("This platform is not yet supported.");
+            throw new Error("This platform is not yet supported.");
             return;
     }
 }
@@ -356,12 +364,20 @@ async function runWindowsCommand(command: CatCom): Promise<void> {
     }
 }
 
-function printCategory(index: number, name: string, description: string): void {
-    console.log(`${index}) ${ConsoleTextYellow}${name}${ConsoleTextReset}: ${description}`);
+function getCategoryPrint(category: CatCom, index?: number): string {
+    if (index !== undefined) {
+        return `${index}) ${ConsoleTextYellow}${category.name}${ConsoleTextReset}: ${category.description}`;
+    } else {
+        return `${ConsoleTextYellow}${category.name}${ConsoleTextReset}: ${category.description}`;
+    }
 }
 
-function printCommand(index: number, name: string, description: string): void {
-    console.log(`${index}) ${ConsoleTextCyan}${name}: ${ConsoleTextReset}${description}`);
+function getCommandPrint(command: CatCom, index?: number): string {
+    if (index !== undefined) {
+        return `${index}) ${ConsoleTextCyan}${command.name}: ${ConsoleTextReset}${command.description}`;
+    } else {
+        return `${ConsoleTextCyan}${command.name}: ${ConsoleTextReset}${command.description}`;
+    }
 }
 
 function isCategory(catComObj: CatCom): boolean {
@@ -372,10 +388,10 @@ function listCommands(catComObjList: CatCom[]): void {
     for(let i = 0; i < catComObjList.length; i++) {
         // If the first element in the subCatCom is a string, we know that it isn't a category.
         if(isCategory(catComObjList[i])) {
-            printCategory(i, catComObjList[i].name, catComObjList[i].description);
+            console.log(getCategoryPrint(catComObjList[i], i));
         }
         else {
-            printCommand(i, catComObjList[i].name, catComObjList[i].description);
+            console.log(getCommandPrint(catComObjList[i], i));
         }
     }
 }

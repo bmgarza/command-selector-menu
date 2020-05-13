@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node ./index.ts -f ./command-selector-options.json",
+    "start": "ts-node ./index.ts -f ./csm.json",
     "build": "tsc -p ./tsconfig.json"
   },
   "repository": {
