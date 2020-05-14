@@ -1,29 +1,23 @@
 import { platform as osPlatform } from "os";
 import { existsSync as doesFileExist, readFileSync } from "fs";
-import { extname as fileExtension, join as pathJoin, dirname } from "path";
-import * as commandLineArguments from "command-line-args";
-// This isn't strictly necessary, but it makes the types more legible
-import { OptionDefinition, CommandLineOptions } from "command-line-args";
+import { extname as fileExtension, dirname } from "path";
 
 import {
-    ArgumentEnum,
     CatCom,
     CatComJSON,
     CommandSelectionMenuReturn,
     ExecEnvOption,
     Platforms,
     MainReturn,
+} from "./src/cat-com-structs";
+import { ConsoleTextReset, colorConsole } from "./src/console-colors";
+import {
+    ArgumentEnum,
     ArgumentHelpMessage,
     ArgumentVersionMessage,
-} from "./src/cat-com-structs";
-import {
-    ConsoleTextMagenta,
-    ConsoleTextRed,
-    ConsoleTextYellow,
-    ConsoleTextReset,
-    colorConsole,
-    ConsoleTextCyan,
-} from "./src/console-colors";
+    optionsReceived,
+} from "./src/csm-console-arguments";
+import { csmConsoleColor, csmConErrorColor, csmCategoryColor, csmCommandColor } from "./src/csm-console-colors";
 import { executeCommand, spawnCommand } from "./src/shell-command-promise-wrappers";
 import { confirmCommand, getOptionNumber } from "./src/user-interface"
 
@@ -48,33 +42,6 @@ import { confirmCommand, getOptionNumber } from "./src/user-interface"
  */
 
 const localDirectoryPath: string = dirname(process.execPath);
-
-const argumentOptions: OptionDefinition[] = [
-    {
-        name: ArgumentEnum.FILE,
-        alias: "f",
-        type: String,
-        defaultValue: pathJoin(localDirectoryPath, "csm.json"),
-    },
-    {
-        name: ArgumentEnum.INDEXNAV,
-        alias: "i",
-        type: String,
-    },
-    {
-        name: ArgumentEnum.HELP,
-        alias: "h",
-        type: Boolean,
-    },
-    {
-        name: ArgumentEnum.VERSION,
-        alias: "v",
-        type: Boolean,
-    },
-];
-const optionsReceived: CommandLineOptions = commandLineArguments(
-    argumentOptions,
-);
 
 if (optionsReceived[ArgumentEnum.HELP] === true) {
     console.log(ArgumentHelpMessage);
@@ -102,10 +69,10 @@ else if(
 
     executionPromise
         .then((ret: MainReturn) => {
-            colorConsole(`CSM: Command executed in ${ConsoleTextReset}${Date.now() - ret.startTime}ms`, ConsoleTextMagenta);
+            colorConsole(`CSM: Command executed in ${ConsoleTextReset}${Date.now() - ret.startTime}ms`, csmConsoleColor);
             colorConsole(
                 `CSM: Navigation shortcut flag: ${ConsoleTextReset}-i ${ret.optionSelectedHistory.join(",")}`,
-                ConsoleTextMagenta
+                csmConsoleColor
             );
             process.exit(0);
         })
@@ -150,7 +117,7 @@ async function selectCommandFromIndexNavigation(filePath: string, indexNav: numb
 
     const parsedCommandJSON: CatComJSON = JSON.parse(readFileSync(filePath).toString("utf-8"));
 
-    colorConsole(`File configuration path: ${filePath}`, ConsoleTextMagenta);
+    colorConsole(`File configuration path: ${filePath}`, csmConsoleColor);
 
     // Keep track of the CatCom list when navigating in case we don't find a command at the end of the index navigation.
     let currentCatComList: CatCom[] = parsedCommandJSON.catComList;
@@ -161,7 +128,7 @@ async function selectCommandFromIndexNavigation(filePath: string, indexNav: numb
         try {
             currentCatComSelected = selectCatCom(currentCatComList, indexNav[i]);
             if (!isCategory(currentCatComSelected) && i !== (indexNav.length - 1)) {
-                colorConsole("A command was prematurely reached, ignoring the rest of the indexes provided", ConsoleTextYellow);
+                colorConsole("A command was prematurely reached, ignoring the rest of the indexes provided", csmConsoleColor);
                 // Increase the index by one to make sure that the index used to reach this command is also included in the return.
                 i++;
                 break;
@@ -171,16 +138,16 @@ async function selectCommandFromIndexNavigation(filePath: string, indexNav: numb
         }
         catch (error) {
             // One of the indexes that was provided caused the selectCatCom function to not successfully return a CatCom
-            colorConsole(error.message, ConsoleTextRed);
+            colorConsole(error.message, csmConErrorColor);
             throw new Error("The set of indexes provided don't properly point to an existing command option in the configuration.");
         }
     }
 
     if (isCategory(currentCatComSelected)) {
-        console.log(`${ConsoleTextMagenta}CSM category found: ${getCategoryPrint(currentCatComSelected)}`);
+        console.log(`${csmConsoleColor}CSM category found: ${getCategoryPrint(currentCatComSelected)}`);
         return await commandSelectionMenuLoop(<CatCom[]>currentCatComSelected.subCatCom);
     } else {
-        console.log(`${ConsoleTextMagenta}CSM command found: ${getCommandPrint(currentCatComSelected)}`);
+        console.log(`${csmConsoleColor}CSM command found: ${getCommandPrint(currentCatComSelected)}`);
         return {
             startTime: await runCommandSelected(currentCatComSelected),
             // We slice based on the last index that we ran in order to 
@@ -196,7 +163,7 @@ async function selectCommandFromIndexNavigation(filePath: string, indexNav: numb
 async function openCommandSelectionJSON(filePath: string): Promise<MainReturn> {
     const parsedCommandJSON: CatComJSON = JSON.parse(readFileSync(filePath).toString("utf-8"));
 
-    colorConsole(`File configuration path: ${filePath}`, ConsoleTextMagenta);
+    colorConsole(`File configuration path: ${filePath}`, csmConsoleColor);
 
     return await commandSelectionMenuLoop(parsedCommandJSON.catComList);
 }
@@ -227,7 +194,7 @@ async function commandSelectionMenuLoop (catComList: CatCom[]): Promise<MainRetu
                 // If the string contains the "selection" it is most likely that the error that was received was because
                 //  the user cancelled the command selection confirmation. This ensures that the loop is restarted to
                 //  allow the user to select the correct command, if it was contained within the selection that was made.
-                colorConsole(error.message, ConsoleTextRed);
+                colorConsole(error.message, csmConErrorColor);
                 continue;
             } else {
                 throw error;
@@ -253,7 +220,7 @@ async function commandSelectionMenuLoop (catComList: CatCom[]): Promise<MainRetu
 async function commandSelectionMenu(catComList: CatCom[], optionsSelected: number[] = []): Promise<CommandSelectionMenuReturn> {
     // If we are going to display a command selection menu to the user, we need to make sure that they are aware of what
     //  colors correspond to what.
-    console.log(`${ConsoleTextYellow}Category color    ${ConsoleTextCyan}Command color${ConsoleTextReset}`);
+    console.log(`${csmCategoryColor}Category color    ${csmCommandColor}Command color${ConsoleTextReset}`);
 
     // Create new variables from what was provided in order to be able to modify them.
     let currentCatComList: CatCom[] = catComList;
@@ -267,7 +234,7 @@ async function commandSelectionMenu(catComList: CatCom[], optionsSelected: numbe
         try {
             catComSelected = selectCatCom(currentCatComList, optionSelected);
         } catch (error) {
-            colorConsole(error.message, ConsoleTextRed);
+            colorConsole(error.message, csmConErrorColor);
             continue;
         }
 
@@ -335,7 +302,7 @@ function selectCatCom(catComList: CatCom[], indexSelected: number): CatCom {
  * @param command 
  */
 async function runCommand(command: CatCom): Promise<void> {
-    console.log(`${ConsoleTextMagenta} CSM: Running "${ConsoleTextCyan}${command.name}${ConsoleTextMagenta}"`);
+    console.log(`${csmConsoleColor} CSM: Running "${csmCommandColor}${command.name}${csmConsoleColor}"`);
 
     switch(osPlatform()) {
         case Platforms.Windows:
@@ -359,7 +326,7 @@ async function runWindowsCommand(command: CatCom): Promise<void> {
         // NOTE: BG (May. 03, 2020) There is a way to specify in the exec command what shell to use, but I was
         //  unable to get this to work with powershell commands.
         for(const cmdObj of <string[]>command.subCatCom) {
-            colorConsole(`CSM: Executing "${cmdObj}"`, ConsoleTextMagenta);
+            colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
             await spawnCommand(
                 "powershell",
                 ["-NoProfile", "-Command", `${cmdObj}`],
@@ -368,7 +335,7 @@ async function runWindowsCommand(command: CatCom): Promise<void> {
     }
     else {
         for(const cmdObj of <string[]>command.subCatCom) {
-            colorConsole(`CSM: Executing "${cmdObj}"`, ConsoleTextMagenta);
+            colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
             await spawnCommand(
                 "cmd",
                 ["/c", cmdObj],
@@ -379,17 +346,17 @@ async function runWindowsCommand(command: CatCom): Promise<void> {
 
 function getCategoryPrint(category: CatCom, index?: number): string {
     if (index !== undefined) {
-        return `${index}) ${ConsoleTextYellow}${category.name}${ConsoleTextReset}: ${category.description}`;
+        return `${index}) ${csmCategoryColor}${category.name}${ConsoleTextReset}: ${category.description}`;
     } else {
-        return `${ConsoleTextYellow}${category.name}${ConsoleTextReset}: ${category.description}`;
+        return `${csmCategoryColor}${category.name}${ConsoleTextReset}: ${category.description}`;
     }
 }
 
 function getCommandPrint(command: CatCom, index?: number): string {
     if (index !== undefined) {
-        return `${index}) ${ConsoleTextCyan}${command.name}: ${ConsoleTextReset}${command.description}`;
+        return `${index}) ${csmCommandColor}${command.name}: ${ConsoleTextReset}${command.description}`;
     } else {
-        return `${ConsoleTextCyan}${command.name}: ${ConsoleTextReset}${command.description}`;
+        return `${csmCommandColor}${command.name}: ${ConsoleTextReset}${command.description}`;
     }
 }
 

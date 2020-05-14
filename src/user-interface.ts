@@ -3,10 +3,8 @@ import {
     Interface as readlineInterface,
 } from "readline";
 
-import {
-    ConsoleTextReset,
-    ConsoleTextCyan,
-} from "./console-colors";
+import { ConsoleTextReset } from "./console-colors";
+import { csmCommandColor } from "./csm-console-colors";
 
 const rlInterface: readlineInterface = createInterface(
     {
@@ -36,7 +34,7 @@ export function getOptionNumber(): Promise<number> {
 export function confirmCommand(name: string): Promise<boolean> {
     return new Promise((resolve: (value?: boolean | PromiseLike<boolean>) => void, reject: (reason?: any) => void) => {
         rlInterface.question(
-            `\nAre you sure you want to run the (${ConsoleTextCyan}${name}${ConsoleTextReset}) command? `,
+            `\nAre you sure you want to run the (${csmCommandColor}${name}${ConsoleTextReset}) command? `,
             (answer: string) => {
                 if (answer.match(/^[Yy]+[Ee]*[Ss]*/g) !== null) {
                     resolve(true);
