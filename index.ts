@@ -19,7 +19,7 @@ import {
 } from "./src/csm-console-arguments";
 import { csmConsoleColor, csmConErrorColor, csmCategoryColor, csmCommandColor } from "./src/csm-console-colors";
 import { executeCommand, spawnCommand } from "./src/shell-command-promise-wrappers";
-import { confirmCommand, getOptionNumber } from "./src/user-interface"
+import { confirmCommand, getOptionNumber } from "./src/csm-user-interface"
 
 /**
  * TODO: BG (May. 06, 2020) After some forthought I've come to the conclusion that this command line application
