@@ -106,6 +106,7 @@ if(
 }
 else {
     console.log("A valid json file was not provided");
+    process.exit(2);
 }
 
 //////////////////////////////////////////////////
