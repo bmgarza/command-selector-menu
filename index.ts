@@ -350,7 +350,7 @@ async function runWindowsCommand(command: CatCom): Promise<void> {
             colorConsole(`CSM: Executing "${cmdObj}"`, ConsoleTextMagenta);
             await spawnCommand(
                 "powershell",
-                ["-Command", `cd ${currentPath}; ${cmdObj}`],
+                ["-NoProfile", "-Command", `${cmdObj}`],
             );
         }
     }
