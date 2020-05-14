@@ -1,6 +1,6 @@
 import { platform as osPlatform } from "os";
 import { existsSync as doesFileExist, readFileSync } from "fs";
-import { extname as fileExtension, join as pathJoin } from "path";
+import { extname as fileExtension, join as pathJoin, dirname } from "path";
 import * as commandLineArguments from "command-line-args";
 // This isn't strictly necessary, but it makes the types more legible
 import { OptionDefinition, CommandLineOptions } from "command-line-args";
@@ -47,12 +47,14 @@ import { confirmCommand, getOptionNumber } from "./src/user-interface"
  * navigation would fail sometimes if the user isn't in the correct directory and that doesn't sound right.
  */
 
+const localDirectoryPath: string = dirname(process.execPath);
+
 const argumentOptions: OptionDefinition[] = [
     {
         name: ArgumentEnum.FILE,
         alias: "f",
         type: String,
-        defaultValue: pathJoin(__dirname, "csm.json"),
+        defaultValue: pathJoin(localDirectoryPath, "csm.json"),
     },
     {
         name: ArgumentEnum.INDEXNAV,
