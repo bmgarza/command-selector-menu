@@ -1,41 +1,41 @@
 {
-  "name": "command-selector-menu",
-  "version": "1.0.0",
-  "description": "",
-  "scripts": {
-    "start": "ts-node ./index.ts -f ./csm.json",
-    "build": "tsc -p ./tsconfig.json",
-    "distribute": "npm run build && npx pkg ./build/index.js --scripts .build/**/*.js --targets node10-win-x86 --output ./build/csm"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bmgarza/command-selector-menu.git"
-  },
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/bmgarza/command-selector-menu/issues"
-  },
-  "homepage": "https://github.com/bmgarza/command-selector-menu#readme",
-  "main": "./build/index.js",
-  "bin": "./build/index.js",
-  "pkg": {
-    "scripts": "./build/**/*.js",
-    "targets": "node10-win-x86",
-    "output": "./build/csm"
-  },
-  "dependencies": {
-    "@types/command-line-args": "^5.0.0",
-    "@types/node": "^13.13.4",
-    "child_process": "^1.0.2",
-    "command-line-args": "^5.1.1",
-    "fs": "0.0.1-security",
-    "os": "^0.1.1",
-    "path": "^0.12.7"
-  },
-  "devDependencies": {
-    "pkg": "^4.4.8",
-    "ts-node": "^8.10.1",
-    "typescript": "^3.8.3"
-  }
+    "name": "command-selector-menu",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "start": "ts-node ./index.ts -f ./csm.json",
+        "build": "tsc -p ./tsconfig.json",
+        "distribute": "npm run build && npx pkg ./build/index.js --scripts .build/**/*.js,./build/project.json --targets node10-win-x86 --output ./build/csm"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/bmgarza/command-selector-menu.git"
+    },
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/bmgarza/command-selector-menu/issues"
+    },
+    "homepage": "https://github.com/bmgarza/command-selector-menu#readme",
+    "main": "./build/index.js",
+    "bin": "./build/index.js",
+    "pkg": {
+        "scripts": "./build/**/*.js",
+        "targets": "node10-win-x86",
+        "output": "./build/csm"
+    },
+    "dependencies": {
+        "@types/command-line-args": "^5.0.0",
+        "@types/node": "^13.13.4",
+        "child_process": "^1.0.2",
+        "command-line-args": "^5.1.1",
+        "fs": "0.0.1-security",
+        "os": "^0.1.1",
+        "path": "^0.12.7"
+    },
+    "devDependencies": {
+        "pkg": "^4.4.8",
+        "ts-node": "^8.10.1",
+        "typescript": "^3.8.3"
+    }
 }

@@ -6,12 +6,15 @@ import * as commandLineArguments from "command-line-args";
 import { OptionDefinition, CommandLineOptions } from "command-line-args";
 
 import {
+    ArgumentEnum,
     CatCom,
     CatComJSON,
     CommandSelectionMenuReturn,
     ExecEnvOption,
     Platforms,
     MainReturn,
+    ArgumentHelpMessage,
+    ArgumentVersionMessage,
 } from "./src/cat-com-structs";
 import {
     ConsoleTextMagenta,
@@ -44,12 +47,6 @@ import { confirmCommand, getOptionNumber } from "./src/user-interface"
  * navigation would fail sometimes if the user isn't in the correct directory and that doesn't sound right.
  */
 
-enum ArgumentEnum {
-    FILE = "file",
-    INDEXNAV = "indexNavigation",
-    HELP = "help",
-}
-
 const argumentOptions: OptionDefinition[] = [
     {
         name: ArgumentEnum.FILE,
@@ -67,12 +64,25 @@ const argumentOptions: OptionDefinition[] = [
         alias: "h",
         type: Boolean,
     },
+    {
+        name: ArgumentEnum.VERSION,
+        alias: "v",
+        type: Boolean,
+    },
 ];
 const optionsReceived: CommandLineOptions = commandLineArguments(
     argumentOptions,
 );
 
-if(
+if (optionsReceived[ArgumentEnum.HELP] === true) {
+    console.log(ArgumentHelpMessage);
+    process.exit(0);
+}
+else if (optionsReceived[ArgumentEnum.VERSION] === true) {
+    console.log(ArgumentVersionMessage);
+    process.exit(0);
+}
+else if(
     optionsReceived[ArgumentEnum.FILE] !== undefined &&
     doesFileExist(optionsReceived[ArgumentEnum.FILE]) &&
     fileExtension(optionsReceived[ArgumentEnum.FILE]) === ".json"
