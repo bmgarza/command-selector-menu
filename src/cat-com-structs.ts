@@ -15,6 +15,7 @@ export interface CatCom {
     description: string;
     subCatCom: CatCom[] | string[];
     confirm?: boolean;
+    async?: boolean;
     execEnv?: string;
 }
 

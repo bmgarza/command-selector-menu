@@ -18,7 +18,7 @@ import {
     optionsReceived,
 } from "./src/csm-console-arguments";
 import { csmConsoleColor, csmConErrorColor, csmCategoryColor, csmCommandColor } from "./src/csm-console-colors";
-import { executeCommand, spawnCommand } from "./src/shell-command-promise-wrappers";
+import { executeCommand, spawnCommand, spawnSyncCommand } from "./src/shell-command-promise-wrappers";
 import { confirmCommand, getOptionNumber } from "./src/csm-user-interface"
 
 /**
@@ -319,27 +319,39 @@ async function runCommand(command: CatCom): Promise<void> {
 
 async function runWindowsCommand(command: CatCom): Promise<void> {
     if (command.execEnv === ExecEnvOption.WinPowershell) {
-        // When running a command in powershell the powershell instance is started at its home directory, here we are
-        //  getting the current location in order to use to cd into that directory whenever we run the command.
-        const currentPath: string = await executeCommand("cd");
-
         // NOTE: BG (May. 03, 2020) There is a way to specify in the exec command what shell to use, but I was
         //  unable to get this to work with powershell commands.
-        for(const cmdObj of <string[]>command.subCatCom) {
-            colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
-            await spawnCommand(
-                "powershell",
-                ["-NoProfile", "-Command", `${cmdObj}`],
+        if (command.async === true) {
+            await Promise.all(
+                // Take all the command strings and turn them into powershell command promises
+                (<string[]>command.subCatCom).map((cmdObj: string) => {
+                    colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
+                    return spawnCommand("powershell", ["-NoProfile", "-Command", cmdObj]);
+                })
             );
+        }
+        else {
+            for(const cmdObj of <string[]>command.subCatCom) {
+                colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
+                spawnSyncCommand("powershell", ["-NoProfile", "-Command", cmdObj]);
+            }
         }
     }
     else {
-        for(const cmdObj of <string[]>command.subCatCom) {
-            colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
-            await spawnCommand(
-                "cmd",
-                ["/c", cmdObj],
+        if (command.async === true) {
+            await Promise.all(
+                // Take all the command strings and turn them into powershell command promises
+                (<string[]>command.subCatCom).map((cmdObj: string) => {
+                    colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
+                    return spawnCommand("cmd", ["/c", cmdObj]);
+                })
             );
+        }
+        else {
+            for(const cmdObj of <string[]>command.subCatCom) {
+                colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
+                spawnSyncCommand("cmd", ["/c", cmdObj]);
+            }
         }
     }
 }
