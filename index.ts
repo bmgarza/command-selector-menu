@@ -369,9 +369,9 @@ function getCategoryPrint(category: CatCom, index?: number): string {
 
 function getCommandPrint(command: CatCom, index?: number): string {
     if (index !== undefined) {
-        return `${index}) ${csmCommandColor}${command.name}: ${ConsoleTextReset}${command.description}`;
+        return `${index}) ${csmCommandColor}${command.name}${ConsoleTextReset}: ${command.description}`;
     } else {
-        return `${csmCommandColor}${command.name}: ${ConsoleTextReset}${command.description}`;
+        return `${csmCommandColor}${command.name}${ConsoleTextReset}: ${command.description}`;
     }
 }
 
