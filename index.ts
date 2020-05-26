@@ -228,7 +228,10 @@ async function commandSelectionMenu(catComList: CatCom[], optionsSelected: numbe
 
     while (true) {
         listCommands(currentCatComList);
-        const optionSelected: number = await getOptionNumber();
+        let optionSelected: number = await getOptionNumber();
+        if (optionsReceived[ArgumentEnum.ONEBASE]) {
+            optionSelected--;
+        }
 
         let catComSelected: CatCom;
         try {
@@ -302,7 +305,7 @@ function selectCatCom(catComList: CatCom[], indexSelected: number): CatCom {
  * @param command 
  */
 async function runCommand(command: CatCom): Promise<void> {
-    console.log(`${csmConsoleColor} CSM: Running "${csmCommandColor}${command.name}${csmConsoleColor}"`);
+    console.log(`${csmConsoleColor}CSM: Running "${csmCommandColor}${command.name}${csmConsoleColor}"`);
 
     switch(osPlatform()) {
         case Platforms.Windows:
@@ -380,10 +383,10 @@ function listCommands(catComObjList: CatCom[]): void {
     for(let i = 0; i < catComObjList.length; i++) {
         // If the first element in the subCatCom is a string, we know that it isn't a category.
         if(isCategory(catComObjList[i])) {
-            console.log(getCategoryPrint(catComObjList[i], i));
+            console.log(getCategoryPrint(catComObjList[i], optionsReceived[ArgumentEnum.ONEBASE] ? i+1 : i));
         }
         else {
-            console.log(getCommandPrint(catComObjList[i], i));
+            console.log(getCommandPrint(catComObjList[i], optionsReceived[ArgumentEnum.ONEBASE] ? i+1 : i));
         }
     }
 }
