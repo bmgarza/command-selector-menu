@@ -6,7 +6,6 @@ export enum ExecEnvOption {
 }
 
 export interface CatComJSON {
-    platform: string;
     catComList: CatCom[];
 }
 
@@ -35,4 +34,9 @@ export interface CommandSelectionMenuReturn {
     commandSelected: CatCom;
     indexSelected: number;
     optionSelectedHistory: number[];
+}
+
+export interface BaseArgumentsReturn {
+    baseCommand: string;
+    baseCommandArguments: string[];
 }
