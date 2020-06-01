@@ -40,3 +40,7 @@ export interface BaseArgumentsReturn {
     baseCommand: string;
     baseCommandArguments: string[];
 }
+
+export function isCategory(catComObj: CatCom): boolean {
+    return (typeof catComObj.subCatCom[0]) !== "string";
+}
