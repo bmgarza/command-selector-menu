@@ -1,3 +1,6 @@
+// NOTE: BMG (Jun. 07, 2020) The ExecEnvOptions that are listed should have their value match the name of the command
+//  that is going to be called. i.e. the enumeration for bash should have the value of "bash" since that is how you
+//  would initialize bash.
 export enum ExecEnvOption {
     WinCommandPrompt = "cmd",
     WinPowershell = "powershell",
@@ -15,13 +18,21 @@ export interface CatCom {
     subCatCom: CatCom[] | string[];
     confirm?: boolean;
     async?: boolean;
-    execEnv?: string;
+    execEnv?: ExecEnvOption;
 }
 
+// NOTE: BMG (Jun. 07, 2020) An enumeration for this doesn't exist in the NodeJS typescript global.d.ts file
 export enum Platforms {
-    Linux = "linux",
-    MacOS = "darwin",
-    Windows = "win32"
+    IBM_AIX = "aix",
+    Android = "android",
+    MacOS   = "darwin",
+    FreeBSD = "freebsd",
+    Linux   = "linux",
+    OpenBSD = "openbsd",
+    Sun_OS  = "sunos",
+    Windows = "win32",
+    Cygwin  = "cygwin",
+    NetBSD  = "netbsd",
 }
 
 export interface MainReturn {

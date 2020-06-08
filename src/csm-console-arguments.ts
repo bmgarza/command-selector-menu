@@ -1,4 +1,4 @@
-import { join as pathJoin, dirname } from "path";
+import { join as pathJoin } from "path";
 import * as commandLineArguments from "command-line-args";
 // This isn't strictly necessary, but it makes the types more legible
 import { OptionDefinition, CommandLineOptions } from "command-line-args";
@@ -8,12 +8,14 @@ import {
     version as projectVersion,
     homepage,
 } from "../package.json"
+import { currentPath } from "./environment";
 
 export enum ArgumentEnum {
     FILE = "file",
     INDEXNAV = "index-navigation",
     COLOR = "color",
     ONEBASE = "one-based",
+    DISABLEVERIFY = "disable-verify",
     HELP = "help",
     VERSION = "version",
 }
@@ -35,6 +37,8 @@ Options:
     --color                 Sets the color displayed by the tool, it doesn't affect the color displayed by the commands
                             run (0 = Default, 1 = Dim, 2 = Bright)
     -o --one-based          Uses 1-based indexes for the selection menu instead of 0-based
+    --disable-verify        Disable the verification of execution environments that could potentially not exist, like
+                            bash on windows.
     -h --help               Print the command-selector-menu help dialog (currently set)
     -v --version            Print the command-selector-menu version dialog
 
@@ -43,14 +47,12 @@ Documentation can be found at ${homepage}
 
 export const ArgumentVersionMessage: string = `${projectName} v${projectVersion}`;
 
-const localDirectoryPath: string = dirname(process.execPath);
-
 const argumentOptions: OptionDefinition[] = [
     {
         name: ArgumentEnum.FILE,
         alias: "f",
         type: String,
-        defaultValue: pathJoin(localDirectoryPath, "csm.json"),
+        defaultValue: pathJoin(currentPath, "csm.json"),
     },
     {
         name: ArgumentEnum.INDEXNAV,
@@ -65,6 +67,10 @@ const argumentOptions: OptionDefinition[] = [
     {
         name: ArgumentEnum.ONEBASE,
         alias: "o",
+        type: Boolean,
+    },
+    {
+        name: ArgumentEnum.DISABLEVERIFY,
         type: Boolean,
     },
     {

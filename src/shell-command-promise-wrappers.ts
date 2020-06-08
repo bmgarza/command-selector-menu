@@ -5,6 +5,7 @@ import {
     spawnSync as spawnSyncCmd,
     ChildProcessWithoutNullStreams,
     SpawnOptions,
+    SpawnSyncReturns,
 } from "child_process";
 
 // A promise wrapper for the exec command callback in order to be able to use the command with the async await notation
@@ -53,5 +54,11 @@ export function spawnCommand(commandString: string, args?: string[]): Promise<vo
 }
 
 export function spawnSyncCommand(commandString: string, args?: string[]): void {
-    spawnSyncCmd(commandString, args, spawnOptions);
+    var cmdResult: SpawnSyncReturns<Buffer> = spawnSyncCmd(commandString, args, spawnOptions);
+
+    if (cmdResult.status !== 0) {
+        throw new Error("Command failed to run. (returned non-zero status)");
+    }
+
+    return;
 }
