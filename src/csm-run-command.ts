@@ -106,14 +106,16 @@ function getCurrentPlatformBaseCommandAndArguments(currentPlatform: Platforms, c
  * @param command 
  */
 function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
+    let baseCommand: string = command.execEnv;
     let baseCommandArguments: string[];
     switch (command.execEnv) {
         case ExecEnvOption.WinPowershell:
             baseCommandArguments = ["-NoProfile", "-Command"];
             break;
 
-        case ExecEnvOption.WinCommandPrompt:
         case undefined: // If there isn't an execEnv defined, default to the winCommandPrompt option
+            baseCommand = ExecEnvOption.WinCommandPrompt;
+        case ExecEnvOption.WinCommandPrompt:
             baseCommandArguments = ["/c"];
             break;
 
@@ -126,7 +128,7 @@ function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
     }
 
     return {
-        baseCommand: command.execEnv,
+        baseCommand: baseCommand,
         baseCommandArguments: baseCommandArguments,
     };
 }
@@ -136,10 +138,12 @@ function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
  * @param command 
  */
 function getLinuxBaseArguments(command: CatCom): BaseArgumentsReturn {
+    let baseCommand: string = command.execEnv;
     let baseCommandArguments: string[];
     switch (command.execEnv) {
-        case ExecEnvOption.Bash:
         case undefined: // If there isn't an execEnv defined, default to the bash option
+            baseCommand = ExecEnvOption.Bash;
+        case ExecEnvOption.Bash:
             baseCommandArguments = ["--noprofile", "-c"];
             break;
 
@@ -148,7 +152,7 @@ function getLinuxBaseArguments(command: CatCom): BaseArgumentsReturn {
     }
 
     return {
-        baseCommand: command.execEnv,
+        baseCommand: baseCommand,
         baseCommandArguments: baseCommandArguments,
     };
 }

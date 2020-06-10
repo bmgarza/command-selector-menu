@@ -5,8 +5,8 @@
     "scripts": {
         "start": "ts-node ./index.ts -f ./csm.json",
         "build": "tsc -p ./tsconfig.json",
-        "distribute": "npm run build && npm run binary:win",
-        "binary:win": "npx pkg ./build/index.js --scripts .build/**/*.js,./build/project.json --targets node10-win-x86 --output ./build/csm"
+        "distribute": "npm run build && npm run build:bin",
+        "build:bin": "npx pkg ./build/index.js --scripts .build/**/*.js,./build/project.json --targets node10-win-x64,node10-linux-x64 --output ./build/csm"
     },
     "repository": {
         "type": "git",
