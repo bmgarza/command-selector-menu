@@ -73,6 +73,8 @@ async function confirmEnvExistance(platform: Platforms, environment: ExecEnvOpti
         case Platforms.Linux:
             // NOTE: BMG (Jun. 08, 2020) I'm not 100% sure if this is the best way of detecting whether the execution
             //  environment exists in the current platform or not.
+            // NOTE: BMG (Jun. 08, 2020) This method probably works for any system that includes the util-linux package
+            //  or the whereis command.
             const whereisRet: string = await executeCommand(`whereis -b ${environment}`);
             if (whereisRet.split(" ").length > 1) {
                 return true;
