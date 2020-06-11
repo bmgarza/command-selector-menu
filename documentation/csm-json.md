@@ -7,11 +7,15 @@ whenever it is a Command option that is listed.
 
 The Category/Command option has the following structure:
 
+TODO: BMG (Jun. 11, 2020) Add the typings for each one of the options in the structure
+
 * **name**: A string that contains the name of the Category or Command that is being defined.
 * **description**: A string that contains a description of the Category or Command that is being defined.
 * **subCatCom**: Either a list of more Category/Command options, or a list of command strings that are going to be run.
 * **confirm** (Optional): Prompt the user for a confirmation before the command is run.
 * **async** (Optional): Run the list of commands that were defined asynchronously (All at the same time).
+* **singleSession** (Optional): If the async option has been left false, run the list of commands in the same session.
+This allows for environment variables to be preserved between commands.
 * **execEnv** (Optional): The execution environment under which to run the command that was provided. The possible
 options that can be taken here depend on the operating system in which is being run, you can see the details
 [here](##execEnv).

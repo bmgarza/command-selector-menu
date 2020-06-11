@@ -18,6 +18,7 @@ export interface CatCom {
     subCatCom: CatCom[] | string[];
     confirm?: boolean;
     async?: boolean;
+    singleSession?: boolean;
     execEnv?: ExecEnvOption;
 }
 
@@ -50,6 +51,7 @@ export interface CommandSelectionMenuReturn {
 export interface BaseArgumentsReturn {
     baseCommand: string;
     baseCommandArguments: string[];
+    commandDivider: string;
 }
 
 export function isCategory(catComObj: CatCom): boolean {

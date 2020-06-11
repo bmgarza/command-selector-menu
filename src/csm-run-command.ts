@@ -45,11 +45,29 @@ export async function runCommand(command: CatCom): Promise<void> {
         );
     }
     else {
-        for(const cmdObj of <string[]>command.subCatCom) {
-            colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
+        if (command.singleSession !== true) {
+            for(const cmdObj of <string[]>command.subCatCom) {
+                colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
+                // We're using the spawnSync command instead of the spawn command in order to ensure that commands that
+                //  take user input work with stdin properly
+                spawnSyncCommand(baseCommandAndArguments.baseCommand, [...baseCommandAndArguments.baseCommandArguments, cmdObj]);
+            }
+        }
+        else {
+            // Run all the commands in a single execution environment session, allowing for environment variables to
+            //  carry over between commands.
+            for(const cmdObj of <string[]>command.subCatCom) {
+                colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
+            }
             // We're using the spawnSync command instead of the spawn command in order to ensure that commands that take
             //  user input work with stdin properly
-            spawnSyncCommand(baseCommandAndArguments.baseCommand, [...baseCommandAndArguments.baseCommandArguments, cmdObj]);
+            spawnSyncCommand(
+                baseCommandAndArguments.baseCommand,
+                [
+                    ...baseCommandAndArguments.baseCommandArguments,
+                    (<string[]>command.subCatCom).join(baseCommandAndArguments.commandDivider)
+                ]
+            );
         }
     }
 }
@@ -121,6 +139,7 @@ function getCurrentPlatformBaseCommandAndArguments(currentPlatform: Platforms, c
 function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
     let baseCommand: string = command.execEnv;
     let baseCommandArguments: string[];
+    let commandDivider: string = ";"; // This is the most common divider used
     switch (command.execEnv) {
         case ExecEnvOption.WinPowershell:
             baseCommandArguments = ["-NoProfile", "-Command"];
@@ -130,6 +149,7 @@ function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
             baseCommand = ExecEnvOption.WinCommandPrompt;
         case ExecEnvOption.WinCommandPrompt:
             baseCommandArguments = ["/c"];
+            commandDivider = "&&"; // Command prompt doesn't like semi-colons
             break;
 
         case ExecEnvOption.Bash:
@@ -143,6 +163,7 @@ function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
     return {
         baseCommand: baseCommand,
         baseCommandArguments: baseCommandArguments,
+        commandDivider: commandDivider,
     };
 }
 
@@ -158,6 +179,7 @@ function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
 function getLinuxBaseArguments(command: CatCom): BaseArgumentsReturn {
     let baseCommand: string = command.execEnv;
     let baseCommandArguments: string[];
+    let commandDivider: string = ";"; // This is the most common divider used
     switch (command.execEnv) {
         case undefined: // If there isn't an execEnv defined, default to the bash option
             baseCommand = ExecEnvOption.Bash;
@@ -172,5 +194,6 @@ function getLinuxBaseArguments(command: CatCom): BaseArgumentsReturn {
     return {
         baseCommand: baseCommand,
         baseCommandArguments: baseCommandArguments,
+        commandDivider: commandDivider,
     };
 }
