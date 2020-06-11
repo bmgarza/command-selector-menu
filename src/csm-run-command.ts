@@ -15,7 +15,7 @@ const QuestionableEnvironments: Record<string, QEnvInterface> = {
 
 /**
  * This function goes through the process of running the command on the platform this is being run on.
- * @param command 
+ * @param command The CatCom command that the user has selected.
  */
 export async function runCommand(command: CatCom): Promise<void> {
     console.log(`${csmConsoleColor}CSM: Running "${csmCommandColor}${command.name}${csmConsoleColor}"`);
@@ -23,20 +23,21 @@ export async function runCommand(command: CatCom): Promise<void> {
     const baseCommandAndArguments: BaseArgumentsReturn = getCurrentPlatformBaseCommandAndArguments(currentPlatform, command);
 
     if (
-        optionsReceived[ArgumentEnum.DISABLEVERIFY] === false &&
+        optionsReceived[ArgumentEnum.DISABLEVERIFY] !== true &&
         command.execEnv !== undefined &&
-        Object.values(QuestionableEnvironments).includes({plat: currentPlatform, env: command.execEnv}) &&
+        // Convert the record into an array and try to find the index where the parameters match
+        Object.values(QuestionableEnvironments).findIndex((val: QEnvInterface) => val.plat === currentPlatform && val.env === command.execEnv) >= 0 &&
         (await confirmEnvExistance(currentPlatform, command.execEnv)) === false
     ) {
-        throw new Error("The execEnv defined for the command selected doesn't look to exist.");
+        throw new Error(`The execution environment defined for the command selected (${command.execEnv}) doesn't appear to exist.`);
     }
 
     // NOTE: BG (May. 03, 2020) There is a way to specify in the exec command what shell to use, but I was
     //  unable to get this to work with powershell commands.
     if (command.async === true) {
+        // Take all the command strings and combine the resulting promises into a single one, to make sure they are
+        //  all run simultaneously.
         await Promise.all(
-            // Take all the command strings and combine the resulting promises into a single one, to make sure they are
-            //  all run simultaneously.
             (<string[]>command.subCatCom).map((cmdObj: string) => {
                 colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
                 return spawnCommand(baseCommandAndArguments.baseCommand, [...baseCommandAndArguments.baseCommandArguments, cmdObj]);
@@ -46,11 +47,18 @@ export async function runCommand(command: CatCom): Promise<void> {
     else {
         for(const cmdObj of <string[]>command.subCatCom) {
             colorConsole(`CSM: Executing "${cmdObj}"`, csmConsoleColor);
+            // We're using the spawnSync command instead of the spawn command in order to ensure that commands that take
+            //  user input work with stdin properly
             spawnSyncCommand(baseCommandAndArguments.baseCommand, [...baseCommandAndArguments.baseCommandArguments, cmdObj]);
         }
     }
 }
 
+/**
+ * Determine if the execution environment exists on a given platform.
+ * @param platform The current platform.
+ * @param environment The environment in question.
+ */
 async function confirmEnvExistance(platform: Platforms, environment: ExecEnvOption): Promise<boolean> {
     switch (platform) {
         case Platforms.Windows:
@@ -81,6 +89,11 @@ async function confirmEnvExistance(platform: Platforms, environment: ExecEnvOpti
     return false;
 }
 
+/**
+ * Pretty self explanatory, gets the base arguments that are going to be used based on the current platform.
+ * @param currentPlatform The current platform.
+ * @param command The CatCom command that the user has selected.
+ */
 function getCurrentPlatformBaseCommandAndArguments(currentPlatform: Platforms, command: CatCom): BaseArgumentsReturn {
     let baseCommandReturn: BaseArgumentsReturn;
     switch(currentPlatform) {
@@ -92,18 +105,16 @@ function getCurrentPlatformBaseCommandAndArguments(currentPlatform: Platforms, c
             baseCommandReturn = getLinuxBaseArguments(command);
             break;
 
-        case Platforms.MacOS:
         default:
             throw new Error("This platform is not yet supported.");
-            return;
     }
 
     return baseCommandReturn;
 }
 
 /**
- * 
- * @param command 
+ * Generate the base arguments for Windows systems based on the specifics of the command that the user has selected.
+ * @param command The CatCom command that the user has selected.
  */
 function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
     let baseCommand: string = command.execEnv;
@@ -134,8 +145,13 @@ function getWindowsBaseArguments(command: CatCom): BaseArgumentsReturn {
 }
 
 /**
- * 
- * @param command 
+ * Generate the base arguments for Linux systems based on the specifics of the command that the user has selected.
+ *
+ * NOTE: BMG (Jun. 11, 2020) I am aware that it is not a given that the bash environment exists within a Linux
+ * environment, but it is the most prevalent command line so it is what we are using as the default for the time being.
+ * If it makes sense later I might adapt it to use the confirmEnvExistance function to dynamically choose the
+ * environment if it is not defined, it would add execution time but it might be worth it for some users.
+ * @param command The CatCom command that the user has selected.
  */
 function getLinuxBaseArguments(command: CatCom): BaseArgumentsReturn {
     let baseCommand: string = command.execEnv;
