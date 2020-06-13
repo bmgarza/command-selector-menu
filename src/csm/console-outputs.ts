@@ -1,6 +1,6 @@
 import { CatCom, isCategory } from "./cat-com-structs";
-import { ConsoleTextReset } from "./console-colors";
-import { ArgumentEnum, optionsReceived } from "./csm-console-arguments";
+import { ConsoleTextReset } from "../console-colors";
+import { ArgumentEnum, optionsReceived } from "./console-arguments";
 import { csmCategoryColor, csmCommandColor } from "./csm-console-colors";
 
 export function getCategoryPrint(category: CatCom, index?: number): string {

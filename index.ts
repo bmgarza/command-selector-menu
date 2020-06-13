@@ -1,11 +1,12 @@
 import { existsSync as doesFileExist } from "fs";
 import { extname as fileExtension } from "path";
 
-import { MainReturn } from "./src/cat-com-structs";
 import { ConsoleTextReset, colorConsole } from "./src/console-colors";
-import { ArgumentEnum, ArgumentHelpMessage, ArgumentVersionMessage, optionsReceived } from "./src/csm-console-arguments";
-import { csmConsoleColor, csmConErrorColor } from "./src/csm-console-colors";
-import { selectCommandFromIndexNavigation, openCommandSelectionJSON } from "./src/csm-command-selection";
+
+import { MainReturn } from "./src/csm/cat-com-structs";
+import { ArgumentEnum, ArgumentHelpMessage, ArgumentVersionMessage, optionsReceived } from "./src/csm/console-arguments";
+import { csmConsoleColor, csmConErrorColor } from "./src/csm/csm-console-colors";
+import { selectCommandFromIndexNavigation, openCommandSelectionJSON } from "./src/csm/command-selection";
 
 if (optionsReceived[ArgumentEnum.HELP] === true) {
     console.log(ArgumentHelpMessage);

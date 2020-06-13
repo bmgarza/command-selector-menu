@@ -1,5 +1,5 @@
 import { dirname, extname as fileExtension } from "path";
-import { Platforms } from "./cat-com-structs";
+import { Platforms } from "./csm/cat-com-structs";
 
 export const currentPlatform: Platforms = <Platforms>process.platform;
 export const currentPath: string = dirname(process.execPath);

@@ -3,12 +3,8 @@ import * as commandLineArguments from "command-line-args";
 // This isn't strictly necessary, but it makes the types more legible
 import { OptionDefinition, CommandLineOptions } from "command-line-args";
 
-import {
-    name as projectName,
-    version as projectVersion,
-    homepage,
-} from "../package.json"
-import { currentPath } from "./environment";
+import { name as projectName, version as projectVersion, homepage } from "../../package.json"
+import { currentPath } from "../environment";
 
 export enum ArgumentEnum {
     FILE = "file",

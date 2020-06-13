@@ -1,9 +1,7 @@
-import {
-    createInterface,
-    Interface as readlineInterface,
-} from "readline";
+import { createInterface, Interface as readlineInterface } from "readline";
 
-import { ConsoleTextReset } from "./console-colors";
+import { ConsoleTextReset } from "../console-colors";
+
 import { csmCommandColor } from "./csm-console-colors";
 
 const rlInterface: readlineInterface = createInterface(

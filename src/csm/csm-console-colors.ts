@@ -1,4 +1,4 @@
-import { optionsReceived, ArgumentEnum, ConsoleColors } from "./csm-console-arguments"
+import { optionsReceived, ArgumentEnum, ConsoleColors } from "./console-arguments"
 import {
     ConsoleTextMagenta,
     ConsoleTextCyan,
@@ -6,7 +6,7 @@ import {
     ConsoleTextDim,
     ConsoleTextBright,
     ConsoleTextRed,
-} from "./console-colors";
+} from "../console-colors";
 
 export let csmConsoleColor: string = "";
 export let csmConErrorColor: string = "";

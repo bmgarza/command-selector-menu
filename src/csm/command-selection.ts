@@ -1,14 +1,14 @@
 import { readFileSync } from "fs";
 
+import { ConsoleTextReset, colorConsole } from "../console-colors";
+
 import { CatCom, CatComJSON, CommandSelectionMenuReturn, MainReturn } from "./cat-com-structs";
 import { csmCommandColor, csmConsoleColor, csmConErrorColor, csmCategoryColor } from "./csm-console-colors";
-import { colorConsole } from "./console-colors";
 import { isCategory } from "./cat-com-structs";
-import { getCategoryPrint, getCommandPrint, listCommands } from "./csm-console-outputs";
-import { confirmCommand, getOptionNumber } from "./csm-user-interface"
-import { ConsoleTextReset } from "./console-colors";
-import { ArgumentEnum, optionsReceived } from "./csm-console-arguments";
-import { runCommand } from "./csm-run-command";
+import { getCategoryPrint, getCommandPrint, listCommands } from "./console-outputs";
+import { confirmCommand, getOptionNumber } from "./user-interface"
+import { ArgumentEnum, optionsReceived } from "./console-arguments";
+import { runCommand } from "./run-command";
 
 /**
  * Navigate through the csm.json that was provided given the index navigation string that was provided. If it

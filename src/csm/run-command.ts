@@ -1,9 +1,10 @@
+import { colorConsole } from "../console-colors";
+import { currentPlatform } from "../environment";
+import { spawnCommand, spawnSyncCommand, executeCommand } from "../shell-command-promise-wrappers";
+
 import { BaseArgumentsReturn, CatCom, ExecEnvOption, Platforms } from "./cat-com-structs";
-import { ArgumentEnum, optionsReceived } from "./csm-console-arguments";
+import { ArgumentEnum, optionsReceived } from "./console-arguments";
 import { csmCommandColor, csmConsoleColor } from "./csm-console-colors";
-import { colorConsole } from "./console-colors";
-import { spawnCommand, spawnSyncCommand, executeCommand } from "./shell-command-promise-wrappers";
-import { currentPlatform } from "./environment";
 
 interface QEnvInterface {
     plat: Platforms,
