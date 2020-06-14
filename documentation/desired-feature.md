@@ -26,3 +26,12 @@ the file in question.
     properly test the navigation through the configuration that was passed through to the program. I could potentially
     test shell executions, but the shell execution is basically just a wrapper for the node child_process functions so
     there isn't much to test there.
+* Add dynamic environment selection for linux environments.
+  * It is not a given that the bash environment is the default, or even exists, within a given linux distribution. Using
+    the confirmEnvExistance to cycle through the set of possible Linux environments until one that exists would address
+    this, but would add some amount of delay before the selected command is finally run (though I think the worst case
+    scenario for this check would be roughly a 200 ms delay)
+    * confirmEnvExistance depends on the whereis command, which is included with the util-linux package. If this would
+      be implemented, a check to see if the whereis command exists would also be necessary.
+  * That being said, it is the most prevalent command line, and I'd be willing to bet that the systems where having csm
+    makes sense has 100% overlap with systems that have the bash environment (even if it isn't the default environment).
