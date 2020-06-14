@@ -18,7 +18,6 @@ function verifyCatComList(catComList: CatCom[]): boolean {
 
     for (const catCom of catComList) {
         outputBool = outputBool && catCom.name !== undefined;
-        outputBool = outputBool && catCom.description !== undefined;
         outputBool = outputBool && catCom.subCatCom !== undefined;
 
         if (!outputBool) break;

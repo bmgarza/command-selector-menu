@@ -22,7 +22,7 @@ export interface CatComJSON {
 //  ./src/csm/cat-com-json-utils.ts file.
 export interface CatCom {
     name: string;
-    description: string;
+    description?: string;
     subCatCom: CatCom[] | string[];
     confirm?: boolean;
     async?: boolean;
