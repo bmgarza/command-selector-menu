@@ -8,10 +8,9 @@ TODO comments that talk about potential things to do in the future.
 * Expand documentation to give examples of how to make the json that will be provided to the program.
 * Add a return to the JSON verification to better indicate where the problem in the JSON is present.
 * Add documentation for the error return numbers that can possibly be returned by the program.
-* Fix the error message that is returned when the user doesn't enter a valid option when selecting a category or
-command.
 * Add Typescript linting to the project.
 * Add support for displaying too many commands given the size of the user's current terminal.
+* Go through and update the Errors that are generated throughout the application to no longer be generic Error instances
 
 ## Not priority
 

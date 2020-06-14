@@ -126,15 +126,18 @@ async function commandSelectionMenu(catComList: CatCom[], optionsSelected: numbe
 
     while (true) {
         listCommands(currentCatComList);
-        let optionSelected: number = await getOptionNumber();
-        if (optionsReceived[ArgumentEnum.ONEBASE]) {
-            optionSelected--;
-        }
-
+        let optionSelected: number;
         let catComSelected: CatCom;
         try {
+            optionSelected = await getOptionNumber();
+
+            if (optionsReceived[ArgumentEnum.ONEBASE]) {
+                optionSelected--;
+            }
+
             catComSelected = selectCatCom(currentCatComList, optionSelected);
-        } catch (error) {
+        }
+        catch (error) {
             colorConsole(error.message, csmConErrorColor);
             continue;
         }
@@ -171,7 +174,7 @@ function selectCatCom(catComList: CatCom[], indexSelected: number): CatCom {
         return catComList[indexSelected];
     }
     else {
-        throw new Error(`A valid index for the given list wasn't given: ${indexSelected}`);
+        throw new Error(`The given index was outside the range of the list: ${indexSelected}`);
     }
 
 }

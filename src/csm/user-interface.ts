@@ -16,13 +16,18 @@ export function getOptionNumber(): Promise<number> {
         rlInterface.question(
             "\nEnter option number: ",
             (answer: string) => {
+                if (answer === "") {
+                    reject(new Error("No value was entered."));
+                }
+
                 const parsedInt: number = parseInt(answer);
                 if(!isNaN(parsedInt)) {
                     resolve(parsedInt);
                 }
                 else {
                     // This function doesn't reject because handling rejects in the async notation is disgusting.
-                    resolve(-1);
+                    // resolve(-1);
+                    reject(new Error(`The value entered is not a valid number (${answer}).`));
                 }
             }
         );
