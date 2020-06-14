@@ -11,5 +11,9 @@ the main `csm.json` file that is provided to the binary.
 * Create an AWS account, specifically an S3 bucket, for the project to distribute pre-made versions of the binary.
 * Expand documentation to give examples of how to make the json that will be provided to the program.
 * Add support for pulling/pushing the `csm.json` using git gists, or any other file repository.
-* Add JSON verification into the application.
 * Add testing to the application. This will likely need to also include platform specific testing to be effective.
+* Add a return to the JSON verification to better indicate where the problem in the JSON is present.
+* Separate the command selection part of the program from the actual running of the command.
+* Fix project debugging in VSCode through WSL, it currently returns an error saying it is unable to find the location of
+the file in question.
+* Add documentation for the error return numbers that can possibly be returned by the program.

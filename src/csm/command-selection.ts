@@ -17,17 +17,13 @@ import { runCommand } from "./run-command";
  * @param filePath The path to the csm.json you want to work with.
  * @param indexNav The parsed index navigation string provided by the user.
  */
-export async function selectCommandFromIndexNavigation(filePath: string, indexNav: number[]): Promise<MainReturn> {
+export async function selectCommandFromIndexNavigation(catComJSON: CatComJSON, indexNav: number[]): Promise<MainReturn> {
     if (indexNav.length === 0) {
         throw new Error("Insufficient index navigation provided.");
     }
 
-    const parsedCommandJSON: CatComJSON = JSON.parse(readFileSync(filePath).toString("utf-8"));
-
-    colorConsole(`File configuration path: ${filePath}`, csmConsoleColor);
-
     // Keep track of the CatCom list when navigating in case we don't find a command at the end of the index navigation.
-    let currentCatComList: CatCom[] = parsedCommandJSON.catComList;
+    let currentCatComList: CatCom[] = catComJSON.catComList;
     let currentCatComSelected: CatCom;
 
     let i;
@@ -67,12 +63,8 @@ export async function selectCommandFromIndexNavigation(filePath: string, indexNa
  * Opens the command selection menu directly from the root of the configuration file that was given.
  * @param filePath 
  */
-export async function openCommandSelectionJSON(filePath: string): Promise<MainReturn> {
-    const parsedCommandJSON: CatComJSON = JSON.parse(readFileSync(filePath).toString("utf-8"));
-
-    colorConsole(`File configuration path: ${filePath}`, csmConsoleColor);
-
-    return await commandSelectionMenuLoop(parsedCommandJSON.catComList);
+export async function openCommandSelectionJSON(catComJSON: CatComJSON): Promise<MainReturn> {
+    return await commandSelectionMenuLoop(catComJSON.catComList);
 }
 
 /**

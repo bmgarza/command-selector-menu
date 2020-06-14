@@ -30,10 +30,17 @@ export enum Platforms {
     FreeBSD = "freebsd",
     Linux   = "linux",
     OpenBSD = "openbsd",
-    Sun_OS  = "sunos",
+    SunOS  = "sunos",
     Windows = "win32",
     Cygwin  = "cygwin",
     NetBSD  = "netbsd",
+}
+
+export enum ErrorRet {
+    Success,
+    ProcessFailed,
+    InvalidConfiguration,
+    InvalidJSONFormat,
 }
 
 export interface MainReturn {
