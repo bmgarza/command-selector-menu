@@ -6,9 +6,9 @@ import { ConsoleTextReset, colorConsole } from "./src/console-colors";
 import { MainReturn, CatComJSON, ErrorRet } from "./src/csm/cat-com-structs";
 import { ArgumentEnum, ArgumentHelpMessage, ArgumentVersionMessage, optionsReceived } from "./src/csm/console-arguments";
 import { csmConsoleColor, csmConErrorColor } from "./src/csm/csm-console-colors";
-import { selectCommandFromIndexNavigation, openCommandSelectionJSON } from "./src/csm/command-selection";
 import { verifyJSONFile } from "./src/csm/cat-com-json-utils";
 import { production } from "./src/environment";
+import { csmWrapper } from "./src/csm/async-await-wrapper";
 
 if (!production) {
     console.log("The process is in DEBUGGING mode.");
@@ -34,18 +34,7 @@ else if(
     }
     colorConsole(`File configuration path: ${optionsReceived[ArgumentEnum.FILE]}`, csmConsoleColor);
 
-    let executionPromise: Promise<MainReturn>;
-
-    if (optionsReceived[ArgumentEnum.INDEXNAV] !== undefined) {
-        // The index navigation flag was given
-        executionPromise = selectCommandFromIndexNavigation(parsedCommandJSON,
-                                                            parseIndexNavigationString(optionsReceived[ArgumentEnum.INDEXNAV]));
-    }
-    else {
-        executionPromise = openCommandSelectionJSON(parsedCommandJSON);
-    }
-
-    executionPromise
+    csmWrapper(parsedCommandJSON, optionsReceived)
         .then((ret: MainReturn) => {
             colorConsole(`CSM: Command executed in ${ConsoleTextReset}${Date.now() - ret.startTime}ms`, csmConsoleColor);
             colorConsole(
@@ -66,19 +55,3 @@ else {
     console.log("An invalid configuration file was provided.");
     process.exit(ErrorRet.InvalidConfiguration);
 }
-
-//////////////////////////////////////////////////
-// Application specific functions               //
-//////////////////////////////////////////////////
-
-function parseIndexNavigationString(input: string): number[] {
-    const indexes: number[] = input.split(",").map((value: string) => parseInt(value, 10));
-    if (indexes.every((value: number) => !isNaN(value))) {
-        // Every index is a valid number
-        return indexes;
-    }
-    else {
-        return [];
-    }
-}
-

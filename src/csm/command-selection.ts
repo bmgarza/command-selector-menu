@@ -1,14 +1,11 @@
-import { readFileSync } from "fs";
-
 import { ConsoleTextReset, colorConsole } from "../console-colors";
 
-import { CatCom, CatComJSON, CommandSelectionMenuReturn, MainReturn } from "./cat-com-structs";
+import { CatCom, CatComJSON, CommandSelectionMenuReturn, SelectionReturn } from "./cat-com-structs";
 import { csmCommandColor, csmConsoleColor, csmConErrorColor, csmCategoryColor } from "./csm-console-colors";
 import { isCategory } from "./cat-com-structs";
 import { getCategoryPrint, getCommandPrint, listCommands } from "./console-outputs";
 import { confirmCommand, getOptionNumber } from "./user-interface"
 import { ArgumentEnum, optionsReceived } from "./console-arguments";
-import { runCommand } from "./run-command";
 
 /**
  * Navigate through the csm.json that was provided given the index navigation string that was provided. If it
@@ -17,7 +14,7 @@ import { runCommand } from "./run-command";
  * @param filePath The path to the csm.json you want to work with.
  * @param indexNav The parsed index navigation string provided by the user.
  */
-export async function selectCommandFromIndexNavigation(catComJSON: CatComJSON, indexNav: number[]): Promise<MainReturn> {
+export async function selectCommandFromIndexNavigation(catComJSON: CatComJSON, indexNav: number[]): Promise<SelectionReturn> {
     if (indexNav.length === 0) {
         throw new Error("Insufficient index navigation provided.");
     }
@@ -48,11 +45,20 @@ export async function selectCommandFromIndexNavigation(catComJSON: CatComJSON, i
 
     if (isCategory(currentCatComSelected)) {
         console.log(`${csmConsoleColor}CSM category found: ${getCategoryPrint(currentCatComSelected)}`);
-        return await commandSelectionMenuLoop(<CatCom[]>currentCatComSelected.subCatCom);
+        return await commandSelectionMenuLoop(<CatCom[]>currentCatComSelected.subCatCom, indexNav.slice(0, i));
     } else {
         console.log(`${csmConsoleColor}CSM command found: ${getCommandPrint(currentCatComSelected)}`);
+
+        if (currentCatComSelected.confirm === true) {
+            const response: boolean = await confirmCommand(currentCatComSelected.name);
+            if (response === false) {
+                return await commandSelectionMenuLoop(<CatCom[]>currentCatComSelected.subCatCom, indexNav.slice(0, i));
+            }
+        }
+
         return {
-            startTime: await runCommandSelected(currentCatComSelected),
+            // startTime: await runCommandSelected(currentCatComSelected),
+            catComSelected: currentCatComSelected,
             // We slice based on the last index that we ran in order to 
             optionSelectedHistory: indexNav.slice(0, i),
         }
@@ -63,7 +69,7 @@ export async function selectCommandFromIndexNavigation(catComJSON: CatComJSON, i
  * Opens the command selection menu directly from the root of the configuration file that was given.
  * @param filePath 
  */
-export async function openCommandSelectionJSON(catComJSON: CatComJSON): Promise<MainReturn> {
+export async function openCommandSelectionJSON(catComJSON: CatComJSON): Promise<SelectionReturn> {
     return await commandSelectionMenuLoop(catComJSON.catComList);
 }
 
@@ -73,35 +79,28 @@ export async function openCommandSelectionJSON(catComJSON: CatComJSON): Promise<
  * when the user declines the confirmation of a given command.
  * @param catComList 
  */
-async function commandSelectionMenuLoop (catComList: CatCom[]): Promise<MainReturn> {
+async function commandSelectionMenuLoop (catComList: CatCom[], existingOpHistory: number[] = []): Promise<SelectionReturn> {
     // Keep track of the CatCom list and the option selection history as we are traversing the csm.json
     let currentCatComList: CatCom[] = catComList;
-    let currentOptionSelectedHistory: number[] = [];
+    let currentOptionSelectedHistory: number[] = existingOpHistory;
 
+    // A while loop to allow the user to select another command if they decline the confirmation for the command that
+    //  they did select
     while (true) {
         const selectionReturn: CommandSelectionMenuReturn = await commandSelectionMenu(currentCatComList, currentOptionSelectedHistory);
         // Assign the current CatCom list to be the parent list that was return from the selection menu to allow the user 
         currentCatComList = selectionReturn.commandSelectedParentList;
         currentOptionSelectedHistory = selectionReturn.optionSelectedHistory;
 
-        let commandStartTime: number;
-        try {
-            commandStartTime = await runCommandSelected(selectionReturn.commandSelected);
-        } catch (error) {
-            const errorMessageString: string = <string>error.message;
-            if (errorMessageString.includes("selection")) {
-                // If the string contains the "selection" it is most likely that the error that was received was because
-                //  the user cancelled the command selection confirmation. This ensures that the loop is restarted to
-                //  allow the user to select the correct command, if it was contained within the selection that was made.
-                colorConsole(error.message, csmConErrorColor);
+        if (selectionReturn.commandSelected.confirm === true) {
+            const response: boolean = await confirmCommand(selectionReturn.commandSelected.name);
+            if (response === false) {
                 continue;
-            } else {
-                throw error;
             }
         }
 
         return {
-            startTime: commandStartTime,
+            catComSelected: selectionReturn.commandSelected,
             optionSelectedHistory: [
                 ...currentOptionSelectedHistory,
                 selectionReturn.indexSelected,
@@ -156,28 +155,6 @@ async function commandSelectionMenu(catComList: CatCom[], optionsSelected: numbe
             }
         }
     }
-}
-
-/**
- * This command does the following:
- * 1. Prompts the user for confirmation to run the selected command, if the corresponding boolean has been set in the configuration used.
- *     a. If the user decides to decline the configuration, an error is returned indicating that the selected has been canceled.
- * 2. Once the selection has been confirmed, the time that the command was selected is recorded and the command begins to run.
- * @param selectedCommand The command that has been selected.
- * @returns The number of milliseconds that correspond to the Date.now() value.
- */
-async function runCommandSelected(selectedCommand: CatCom): Promise<number> {
-    if (selectedCommand.confirm === true) {
-        let response: boolean = await confirmCommand(selectedCommand.name);
-        if (response === false) {
-            throw new Error("Command selection canceled.");
-        }
-    }
-
-    const commandStartTime: number = Date.now();
-    await runCommand(selectedCommand);
-
-    return commandStartTime;
 }
 
 /**

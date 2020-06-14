@@ -1,4 +1,4 @@
-import { dirname, extname as fileExtension, basename } from "path";
+import { dirname, extname as fileExtension } from "path";
 import { Platforms } from "./csm/cat-com-structs";
 
 export const currentPlatform: Platforms = <Platforms>process.platform;

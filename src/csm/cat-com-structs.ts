@@ -48,6 +48,11 @@ export interface MainReturn {
     optionSelectedHistory: number[];
 }
 
+export interface SelectionReturn {
+    catComSelected: CatCom;
+    optionSelectedHistory: number[];
+}
+
 export interface CommandSelectionMenuReturn {
     commandSelectedParentList: CatCom[];
     commandSelected: CatCom;
