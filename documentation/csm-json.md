@@ -57,3 +57,103 @@ Below is the set of execution environment that are supported in the various Oper
     * `bash`: bash through WSL (if WSL has been installed and setup)
 1. Linux
     * `bash`: bash or Bourne Again SHell
+
+## Command Examples
+
+Below are a set of command examples to show the possibilities of the Commands that can be created. At the end of the
+day, the command-selector-menu basically allows you to make small shell scripts that can be run easily, so anything that
+can be done with a shell script can be done with the command-selector-menu.
+
+### General
+
+#### Open current directory in Visual Studio Code
+
+```JSON
+{
+    "name": "Open VSCode Here",
+    "description": "Open the current directory in VS Code.",
+    "subCatCom": [
+        "code ."
+    ]
+}
+```
+
+#### Open File in new Visual Studio Code window
+
+```JSON
+{
+    "name": "Open Profile in VSCode",
+    "description": "Open the powershell profile in a VSCode window.",
+    "subCatCom": [
+        "code -n <File_Location>"
+    ],
+}
+```
+
+### Windows
+
+#### Open current directory in File Explorer
+
+```JSON
+{
+    "name": "Open Explorer Here",
+    "description": "Open the Windows explorer in the current directory.",
+    "subCatCom": [
+        "start ."
+    ]
+}
+```
+
+#### Prompt the user for input
+
+Using powershell, you can create a script which prompts the user for input before running the command you're interested
+in running.
+
+```JSON
+{
+    "name": "Delete remote and local branch",
+    "description": "Delete specific branch from local and remote.",
+    "subCatCom": [
+        "git remote prune origin",
+        "git branch -la",
+        "$branch = Read-Host 'What branch do you want to delete'",
+        "git branch -d $branch",
+        "git push origin --delete $branch"
+    ],
+    "execEnv": "powershell",
+    "singleSession": true
+}
+```
+
+The script:
+
+1. Prunes any remote branches that are no longer present based on what is present in origin.
+2. Print all the git branches that are currently present.
+3. Prompts the user for the name of the branch they want to delete.
+4. Delete the local branch first, in case there is no corresponding remote branch for the given branch name.
+5. Delete the remote branch.
+
+A few things to note with this:
+
+* This particular script uses the powershell execution environment. You could technically also use the windows command
+  prompt or bash (if WSL is installed), but powershell is included on all windows installs and it looks significantly
+  cleaner than the equivalent command prompt script.
+* This script is run in singleSession mode, otherwise the declaration of the `$branch` environment variable wouldn't
+  carry over between commands.
+
+#### You want to run a command, but not within the command-selector-menu
+
+While the command-selector-menu can easily handle executing commands like `ssh` and `vim` as child-processes, it is
+understandable not wanting to start an ssh session as a child-process. In these cases, it is possible to simply place
+the command you're interested in running on your clipboard then running it yourself/sharing it with someone else.
+
+```JSON
+{
+    "name": "SSH to PC1",
+    "description": "Place the ssh command to connect to PC1 into the clipboard",
+    "subCatCom": [
+        "Set-Clipboard -Value 'ssh <user>@<pc-location> [arguments]'",
+    ],
+    "execEnv": "powershell"
+}
+```
