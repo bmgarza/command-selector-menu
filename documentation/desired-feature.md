@@ -17,3 +17,5 @@ the main `csm.json` file that is provided to the binary.
 * Fix project debugging in VSCode through WSL, it currently returns an error saying it is unable to find the location of
 the file in question.
 * Add documentation for the error return numbers that can possibly be returned by the program.
+* Fix the error message that is returned when the user doesn't enter a valid option when selecting a category or
+command.

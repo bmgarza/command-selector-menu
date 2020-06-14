@@ -8,6 +8,11 @@ import { ArgumentEnum, ArgumentHelpMessage, ArgumentVersionMessage, optionsRecei
 import { csmConsoleColor, csmConErrorColor } from "./src/csm/csm-console-colors";
 import { selectCommandFromIndexNavigation, openCommandSelectionJSON } from "./src/csm/command-selection";
 import { verifyJSONFile } from "./src/csm/cat-com-json-utils";
+import { production } from "./src/environment";
+
+if (!production) {
+    console.log("The process is in DEBUGGING mode.");
+}
 
 if (optionsReceived[ArgumentEnum.HELP] === true) {
     console.log(ArgumentHelpMessage);
@@ -29,7 +34,6 @@ else if(
     }
     colorConsole(`File configuration path: ${optionsReceived[ArgumentEnum.FILE]}`, csmConsoleColor);
 
-    // The script was provided with a valid csm.json file
     let executionPromise: Promise<MainReturn>;
 
     if (optionsReceived[ArgumentEnum.INDEXNAV] !== undefined) {

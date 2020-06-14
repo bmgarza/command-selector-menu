@@ -10,7 +10,7 @@ export function verifyJSONFile(catComJSONObj: CatComJSON): boolean {
         outputBool = verifyCatComList(catComJSONObj.catComList);
     }
 
-    return false;
+    return outputBool;
 }
 
 function verifyCatComList(catComList: CatCom[]): boolean {
