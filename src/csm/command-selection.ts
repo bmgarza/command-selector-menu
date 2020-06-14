@@ -1,6 +1,6 @@
 import { ConsoleTextReset, colorConsole } from "../console-colors";
 
-import { CatCom, CatComJSON, CommandSelectionMenuReturn, SelectionReturn } from "./cat-com-structs";
+import { CatCom, CatComJSON, CommandSelectionMenuReturn, SelectionReturn, ErrorRet } from "./cat-com-structs";
 import { csmCommandColor, csmConsoleColor, csmConErrorColor, csmCategoryColor } from "./csm-console-colors";
 import { isCategory } from "./cat-com-structs";
 import { getCategoryPrint, getCommandPrint, listCommands } from "./console-outputs";
@@ -138,6 +138,10 @@ async function commandSelectionMenu(catComList: CatCom[], optionsSelected: numbe
             catComSelected = selectCatCom(currentCatComList, optionSelected);
         }
         catch (error) {
+            if ((<string>error.message).includes("Exit")) {
+                throw error;
+            }
+
             colorConsole(error.message, csmConErrorColor);
             continue;
         }

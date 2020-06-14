@@ -20,6 +20,10 @@ export function getOptionNumber(): Promise<number> {
                     reject(new Error("No value was entered."));
                 }
 
+                if (answer === "exit") {
+                    reject(new Error("Exit value was entered."));
+                }
+
                 const parsedInt: number = parseInt(answer);
                 if(!isNaN(parsedInt)) {
                     resolve(parsedInt);
