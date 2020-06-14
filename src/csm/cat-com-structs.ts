@@ -8,10 +8,18 @@ export enum ExecEnvOption {
     Sh = "sh",
 }
 
+// NOTE: BMG (Jun. 14, 2020) If you're going to add a field to this interface, make sure you also update the
+//  ./documentation/csm-json.md with the new field that was added. Additionally, if the field that was added was a
+//  required field, make sure you add the corresponding verification into the verifyJSONFile function in the
+//  ./src/csm/cat-com-json-utils.ts file.
 export interface CatComJSON {
     catComList: CatCom[];
 }
 
+// NOTE: BMG (Jun. 14, 2020) If you're going to add a field to this interface, make sure you also update the
+//  ./documentation/csm-json.md with the new field that was added. Additionally, if the field that was added was a
+//  required field, make sure you add the corresponding verification into the verifyCatComList function in the
+//  ./src/csm/cat-com-json-utils.ts file.
 export interface CatCom {
     name: string;
     description: string;
